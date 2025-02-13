@@ -4,25 +4,28 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8eb0c60f-a32e-4b8d-ac31-965885d2c405" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/NeuralNetGame.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    <list default="true" id="8eb0c60f-a32e-4b8d-ac31-965885d2c405" name="Changes" comment="We made the basic user interface. In the next version, I hope to have a neural net that makes decisions about where to move the player block.">
+      <change afterPath="$PROJECT_DIR$/Brain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "associatedIndex": 7
-}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
   <component name="ProjectId" id="2sv0l13KkQY20AVYKsuVbbNjrc7" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
@@ -31,9 +34,13 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Python.Brain.executor": "Run",
     "Python.GUI.executor": "Run",
+    "Python.Test.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
     "git-widget-placeholder": "master",
+    "last_opened_file_path": "C:/Users/cch30/PycharmProjects/QuaternionKinematics",
     "settings.editor.selected.configurable": "preferences.pluginManager"
   }
 }]]></component>
@@ -53,6 +60,19 @@
       <option name="presentableId" value="Default" />
       <updated>1739320887502</updated>
     </task>
+    <task id="LOCAL-00001" summary="We made the basic user interface. In the next version, I hope to have a neural net that makes decisions about where to move the player block.">
+      <option name="closed" value="true" />
+      <created>1739327404467</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1739327404467</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="We made the basic user interface. In the next version, I hope to have a neural net that makes decisions about where to move the player block." />
+    <option name="LAST_COMMIT_MESSAGE" value="We made the basic user interface. In the next version, I hope to have a neural net that makes decisions about where to move the player block." />
   </component>
 </project>
