@@ -4,10 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8eb0c60f-a32e-4b8d-ac31-965885d2c405" name="Changes" comment="We made the basic user interface. In the next version, I hope to have a neural net that makes decisions about where to move the player block.">
-      <change afterPath="$PROJECT_DIR$/Brain.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-    </list>
+    <list default="true" id="8eb0c60f-a32e-4b8d-ac31-965885d2c405" name="Changes" comment="The game is playable. I forgot to add a loading screen and I want to play around with many different types of neural nets. The one I have now is extremely skibbidy." />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -32,18 +29,18 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.Brain.executor": "Run",
-    "Python.GUI.executor": "Run",
-    "Python.Test.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "last_opened_file_path": "C:/Users/cch30/PycharmProjects/QuaternionKinematics",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.Brain.executor&quot;: &quot;Run&quot;,
+    &quot;Python.GUI.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Test.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/cch30/PycharmProjects/QuaternionKinematics&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -68,11 +65,20 @@
       <option name="project" value="LOCAL" />
       <updated>1739327404467</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="The game is playable. I forgot to add a loading screen and I want to play around with many different types of neural nets. The one I have now is extremely skibbidy.">
+      <option name="closed" value="true" />
+      <created>1739447768995</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1739447768995</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="We made the basic user interface. In the next version, I hope to have a neural net that makes decisions about where to move the player block." />
-    <option name="LAST_COMMIT_MESSAGE" value="We made the basic user interface. In the next version, I hope to have a neural net that makes decisions about where to move the player block." />
+    <MESSAGE value="The game is playable. I forgot to add a loading screen and I want to play around with many different types of neural nets. The one I have now is extremely skibbidy." />
+    <option name="LAST_COMMIT_MESSAGE" value="The game is playable. I forgot to add a loading screen and I want to play around with many different types of neural nets. The one I have now is extremely skibbidy." />
   </component>
 </project>
