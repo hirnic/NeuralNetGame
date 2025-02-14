@@ -4,6 +4,7 @@ import Brain
 import tkinter as tk
 import random
 from mpmath import mp
+
 mp.dps = 100  # set number of digits
 
 # Set up the window
@@ -24,7 +25,7 @@ player_width = 30
 player_height = 30
 player_lane = 5  # Start at the middle lane (lane 5)
 player_moves = ""  # String of digits to store the player moves
-player_network = Brain.Net([Brain.Layer(1)])  # Initialize the player network
+player_network = Brain.Net([Brain.Layer(1)], 5)  # Initialize the player network
 number = ""
 
 collectibles = []
@@ -41,9 +42,10 @@ all_frames = {"layer0": tk.Frame(root),
               "layer2": tk.Frame(root),
               "layer3": tk.Frame(root),
               "layer4": tk.Frame(root),
-             }
+              }
 
-all_labels = {"lane0": tk.Label(root, text="0", font=("Helvetica", 16)),
+all_labels = {"Loading Screen": tk.Label(root, text="Loading...", font=("Helvetica", 16)),
+              "lane0": tk.Label(root, text="0", font=("Helvetica", 16)),
               "lane1": tk.Label(root, text="1", font=("Helvetica", 16)),
               "lane2": tk.Label(root, text="2", font=("Helvetica", 16)),
               "lane3": tk.Label(root, text="3", font=("Helvetica", 16)),
@@ -75,7 +77,7 @@ all_buttons = {
 
     "purchase_node": tk.Button(root, text="Purchase Node", font=("Helvetica", 20)),
     "purchase_layer": tk.Button(root, text="Purchase Layer", font=("Helvetica", 20)),
-    
+
     "add_layer": tk.Button(root, text="+", font=("Helvetica", 20)),
     "remove_layer": tk.Button(root, text="-", font=("Helvetica", 20)),
     "layer0_add": tk.Button(root, text="+", font=("Helvetica", 20)),
@@ -95,6 +97,7 @@ class Level:
     def __init__(self, seed, rounds_played):
         self.seed = seed
         self.rounds_played = rounds_played
+
 
 current_level = Level("r7", 0)
 
@@ -145,6 +148,12 @@ class Player:
         self.id = canvas.create_rectangle(50, 5 * lane_height, 50 + player_width,
                                           player_lane * lane_height + player_height, fill="blue")
 
+    def check_collision(self, collectible):
+        if (self.x1 < collectible.x1 < self.x2 or self.x1 < collectible.x2 < self.x2) and self.lane == collectible.lane:
+            return True
+        return False
+
+
 player = Player()
 
 
@@ -163,18 +172,12 @@ class Collectible:
             return f'#{r:02x}{g:02x}{b:02x}'
 
         self.id = canvas.create_rectangle(600, y1, 600 + collectible_width, y1 + collectible_height,
-                                          fill=rgb_to_hex(2*price**2, int(255/(2*price**2)), 0))
+                                          fill=rgb_to_hex(2 * price ** 2, int(255 / (2 * price ** 2)), 0))
 
     def move(self):
         self.x1 -= collectible_speed
         self.x2 -= collectible_speed
         canvas.move(self.id, -collectible_speed, 0)
-
-    def check_collision(self):
-        if (player.x1 + player.width > self.x1 > player.x1 - collectible_width and
-                (player.lane + 1) * lane_height > self.y1 > player.lane * lane_height - collectible_height):
-            return True
-        return False
 
 
 def clearGUI():
@@ -202,6 +205,8 @@ def move_player(lane):
 
 
 n = 4
+
+
 # Function to create new collectibles
 def create_collectible():
     global n
@@ -214,15 +219,15 @@ def create_collectible():
         collectibles.append(Collectible(5, lane))
     else:
         collectibles.append(Collectible(10, lane))
-    if n <100 and game_active:
+    if n < 100 and game_active:
         canvas.after(generation_rate, create_collectible)
     elif game_active:
-        delay = 2*int(600 / collectible_speed * 60)
+        delay = 2 * int(600 / collectible_speed * 60)
         canvas.after(delay, lambda: build_screen(current_level))
         player.money += score
         current_level.rounds_played += 1
     n += 1
-    move_player(n-5)
+    move_player(n - 5)
 
 
 # Function to move collectibles
@@ -241,10 +246,10 @@ def move_collectibles():
             collectibles.remove(collectible)
 
         # Check for collision with player
-        if collectible.check_collision():
+        if player.check_collision(collectible):
+            score += collectible.price
             canvas.delete(collectible.id)
             collectibles.remove(collectible)
-            score += collectible.price
             # Update score label
             all_labels["score_label"].config(text=f"Score: {score}")
 
@@ -255,26 +260,29 @@ def move_collectibles():
 # Function to start the game
 def start_game(level):
     clearGUI()
+    all_labels["Loading Screen"].place(relx=0.4, rely=0.4, relwidth=0.2, relheight=0.2)
     global player_moves
     global number
     global n
     n = 4
     global game_active
-    game_active = True
 
     if level.seed[0] == "r":
         number = str(mp.mpf(1) / int(level.seed[1:]))
     else:
-        number = str(eval("mp."+level.seed[1:]))
+        number = str(eval("mp." + level.seed[1:]))
 
     # Train the neural net and get the player moves
     if level.seed[0] == "r":
         player_moves = Brain.format_prediction(
-            Brain.train_model(str(mp.mpf(1)/int(level.seed[1:])), level.rounds_played, 5, player_network))
+            Brain.train_model(str(mp.mpf(1) / int(level.seed[1:])), level.rounds_played, player_network, 5))
     else:
         player_moves = Brain.format_prediction(
-            Brain.train_model(str(eval("mp."+level.seed[1:])), level.rounds_played, 5, player_network))
+            Brain.train_model(str(eval("mp." + level.seed[1:])), level.rounds_played, player_network, 5))
     print("Player Moves: ", player_moves)
+
+    game_active = True
+    clearGUI()
 
     # Show the score
     global player, score
@@ -289,7 +297,7 @@ def start_game(level):
     player.place_avatar()
     all_labels["score_label"].place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.1)  # Display score
     all_buttons["quit_button"].place(relx=0.895, rely=0.935, relwidth=0.1, relheight=0.06)
-    all_buttons["quit_button"].configure(command= lambda: build_screen(level))
+    all_buttons["quit_button"].configure(command=lambda: build_screen(level))
 
     # Bind keys for manual movement
     root.bind("<Up>", player.manual_move)
@@ -317,6 +325,7 @@ def purchase_node():
             all_buttons["purchase_node"].place_forget()
         build_screen(current_level)
 
+
 def purchase_layer():
     if player.money >= 500 and player.layers < 5:
         player.money -= 500
@@ -333,19 +342,19 @@ def purchase_layer():
 def add_layer():
     if player_network.total_layers() < player.layers and player_network.total_nodes() < player.nodes:
         player_network.layers.append(Brain.Layer(1))
-        all_frames["layer" + str((len(player_network.layers)-1))].place(
-            relx=0.10 + 0.11 * (len(player_network.layers)-1), rely=0.2, relwidth=0.09, relheight=0.5)
-        for j in range(player_network.layers[(len(player_network.layers)-1)].nodes):
+        all_frames["layer" + str((len(player_network.layers) - 1))].place(
+            relx=0.10 + 0.11 * (len(player_network.layers) - 1), rely=0.2, relwidth=0.09, relheight=0.5)
+        for j in range(player_network.layers[(len(player_network.layers) - 1)].nodes):
             tk.Label(
-                all_frames["layer" + str((len(player_network.layers)-1))],
+                all_frames["layer" + str((len(player_network.layers) - 1))],
                 text="O",
                 font=("Helvetica", 16)).place(
                 relx=0.1,
-                rely=0.5 - 0.05 * player_network.layers[(len(player_network.layers)-1)].nodes + j * 0.1,
+                rely=0.5 - 0.05 * player_network.layers[(len(player_network.layers) - 1)].nodes + j * 0.1,
                 relwidth=0.8,
                 relheight=0.1)
-        all_buttons["layer" + str((len(player_network.layers)-1)) + "_add"].place(
-            relx=0.12 + 0.11 * (len(player_network.layers)-1), rely=0.71, relwidth=0.05, relheight=0.05)
+        all_buttons["layer" + str((len(player_network.layers) - 1)) + "_add"].place(
+            relx=0.12 + 0.11 * (len(player_network.layers) - 1), rely=0.71, relwidth=0.05, relheight=0.05)
     build_screen(current_level)
 
 
@@ -448,7 +457,7 @@ def build_screen(level):
                 relx=0.12 + 0.11 * i, rely=0.71, relwidth=0.05, relheight=0.05)
         if player_network.layers[i].nodes > 1:
             all_buttons["layer" + str(i) + "_remove"].place(
-                relx=0.12 + 0.11 * i, rely=0.76, relwidth=0.05,relheight=0.05)
+                relx=0.12 + 0.11 * i, rely=0.76, relwidth=0.05, relheight=0.05)
     for i in range(5):
         all_buttons["layer" + str(i) + "_add"].configure(command=lambda x=i: add_node(str(x)))
         all_buttons["layer" + str(i) + "_remove"].configure(command=lambda x=i: remove_node(str(x)))
@@ -485,8 +494,6 @@ def level_screen():
         all_buttons["level" + str(i)].place(relx=0.1, rely=0.1 + 0.1 * i, relwidth=0.8, relheight=0.08)
 
 
-        
-        
 # This is the entry point of the game. It displays the main menu.
 def main_menu():
     # Clear the canvas
@@ -504,7 +511,6 @@ all_buttons["level3"].configure(command=lambda: build_screen(Level("tln(2)", 0))
 all_buttons["level4"].configure(command=lambda: build_screen(Level("tpi", 0)))
 all_buttons["level5"].configure(command=lambda: build_screen(Level("te", 0)))
 
-
 # Add an option menu for the seed
 # seed_var = tk.StringVar(value="Seed")
 # seed_label = tk.OptionMenu(root, seed_var,
@@ -513,7 +519,6 @@ all_buttons["level5"].configure(command=lambda: build_screen(Level("te", 0)))
 #                              "te", "tpi"])
 
 main_menu()
-
 
 # Start the Tkinter event loop
 root.mainloop()
