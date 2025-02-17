@@ -5,14 +5,13 @@
 
 import numpy as np
 import random
-import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset  # For mini-batch training
 
 
-input_dim = 6
+input_dim = 4
 output_dim = 1
 batch_size = 10
 max_data_points = 50  # maximum number of data points to store in the training set. More can be purchased.
@@ -92,6 +91,8 @@ def train_model(network=default_network):
     X_train = np.array([data.on_screen for data in network.training_set])
     Y_train = np.array([data.next_move.item() if isinstance(data.next_move, torch.Tensor) else data.next_move
                         for data in network.training_set], dtype=np.float32)
+    # Ensure Y_train is a 1D array
+    Y_train = Y_train.reshape(-1, 1)
     # Convert numpy arrays to PyTorch tensors
     X_train_tensor = torch.from_numpy(X_train).float()
     Y_train_tensor = torch.from_numpy(Y_train).float().view(-1, 1)

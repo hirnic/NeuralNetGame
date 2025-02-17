@@ -5,7 +5,7 @@ import tkinter as tk
 import random
 import numpy as np
 import torch
-import time
+# import time
 
 # Set up the window
 root = tk.Tk()
@@ -18,7 +18,6 @@ screen_height = 500
 # Canvas for game
 canvas = tk.Canvas(root, width=screen_width, height=screen_height, bg="white")
 canvas.pack()
-
 
 # Number of lanes (10 horizontal lanes)
 num_lanes = 10
@@ -66,6 +65,8 @@ all_labels = {"Loading Screen": tk.Label(root, text="Loading...", font=("Helveti
               "lane8": tk.Label(root, text="8", font=("Helvetica", 16)),
               "lane9": tk.Label(root, text="9", font=("Helvetica", 16)),
               "score_label": tk.Label(root, text="Score: 0", font=("Helvetica", 16)),
+              "move_label": tk.Label(root, text="Move: 0", font=("Helvetica", 12)),
+              "generation_label": tk.Label(root, text="Generation: 0", font=("Helvetica", 12)),
 
               "money_label": tk.Label(root, text="Money: 0", font=("Helvetica", 16)),
               "nodes_label": tk.Label(root, text="Nodes: 1", font=("Helvetica", 16)),
@@ -104,6 +105,7 @@ all_buttons = {
 
 current_game_data = []
 
+
 # Here we have the class for the trial data.
 class TrialData:
     def __init__(self, on_screen, next_move):
@@ -127,7 +129,6 @@ class Player:
         self.nodes = 1
         self.layers = 1
         self.id = None
-
 
     def auto_move(self, lane):
         lane_diff = lane - self.lane
@@ -176,7 +177,7 @@ class Collectible:
     def __init__(self, price, lane, velocity):
         self.price = price
         self.lane = lane
-        self.velocity = velocity    # float
+        self.velocity = velocity  # float
         self.x1 = 600
         self.x2 = 600 + collectible_width
         y1 = lane * lane_height + 5
@@ -193,6 +194,31 @@ class Collectible:
         self.x1 -= collectible_speed * self.velocity
         self.x2 -= collectible_speed * self.velocity
         canvas.move(self.id, (-1) * collectible_speed * self.velocity, 0)
+
+
+# This holds all the information about the screen and contains methods for converting to Pytorch-ready data
+class Screen:
+    def __init__(self, screen_shot):
+        self.on_screen = screen_shot  # Usually collectibles
+
+    def to_tensor(self):
+        # If the number of collectibles on the screen is less than the maximum, we do this
+        fake_block = Collectible(0, -1, -1)
+        fake_block.x1 = -1
+        fake_block.x2 = -1
+
+        # This converts the collectible objects to a tensor
+        tensor = torch.tensor([[block.lane, block.x1, block.velocity, block.price] for block in self.on_screen],
+                              dtype=torch.float32)
+
+        # This ensures there are exactly 12 entries in tensor
+        if len(self.on_screen) > 12:
+            tensor = tensor[:12]
+        elif len(self.on_screen) < 12:
+            for _ in range(12 - len(self.on_screen)):
+                tensor = torch.cat((tensor, torch.tensor([[0, -1, -1, -1]], dtype=torch.float32)))
+
+        return tensor
 
 
 def clear_GUI():
@@ -214,22 +240,29 @@ def clear_GUI():
 
 
 def end_game():
-    global game_active
-    game_active = False
-    canvas.delete("all")
-    player.id = None
-    for data_point in current_game_data:
-        player_network.training_set = sorted(player_network.training_set, key=lambda x: x.score)
-        if len(player_network.training_set) < player_network.memory:
-            player_network.training_set.append(data_point)
-        elif data_point.score > player_network.training_set[0].score:
-            player_network.training_set[0] = data_point
-    root.unbind("<all>")
-    build_screen()
+    if collectibles == []:
+        global game_active
+        game_active = False
+        canvas.delete("all")
+        player.id = None
+        for data_point in current_game_data:
+            player_network.training_set = sorted(player_network.training_set, key=lambda x: x.score)
+            if len(player_network.training_set) < player_network.memory:
+                player_network.training_set.append(data_point)
+            elif data_point.score > player_network.training_set[0].score:
+                player_network.training_set[0] = data_point
+        root.unbind("<Up>")
+        root.unbind("<Down>")
+        for i in range(10):
+            root.unbind(str(i))
+        build_screen()
+    else:
+        canvas.after(50, end_game)
 
 
 # This is the function that generates the collectibles.
-def generate_collectible():
+def generate_collectible(optional=0):
+    all_labels["generation_label"].configure(text="Generation: " + str(optional))
     price = random.randint(1, 10)
     if price == 10:
         pass
@@ -237,20 +270,34 @@ def generate_collectible():
         price = 5
     else:
         price = 1
-    collectible = Collectible(price, random.randint(0, num_lanes - 1), random.uniform(1,3))
+    collectible = Collectible(price, random.randint(0, num_lanes - 1), random.uniform(1, 3))
     collectibles.append(collectible)
     canvas.update()
 
 
+# This handles collision detection
+def detect_collision(collectible):
+    global score
+    if ((player.x1 < collectible.x1 < player.x2 or player.x1 < collectible.x2 < player.x2)
+            and player.lane == collectible.lane):
+        player.money += collectible.price
+        canvas.delete(collectible.id)
+        collectibles.remove(collectible)
+        score += collectible.price
+        all_labels["score_label"].configure(text="Score: " + str(score))
+
+
 # This is the function that moves the player and tracks all the data.
-def move_player():
-    old_score = score
+def move_player(optional=0):
+    all_labels["move_label"].configure(text="Move: " + str(optional))
     # We need to convert the screen data to the input data for the neural network.
-    # The input data is of the form [lane, x_position, velocity, price, player lane, player velocity]
+    # The input data is of the form [lane, x_position, velocity, price]
     # Keep in mind, the output data is of the form [next move], where next move is an int (0, 9)
+    screen_shot = Screen(collectibles)
+    print(screen_shot)
     on_screen = sorted(collectibles, key=lambda block: block.x1)[0]
     on_screen = np.array(
-        [on_screen.lane, on_screen.x1, on_screen.velocity, on_screen.price, player.lane, player.velocity])
+        [on_screen.lane, on_screen.x1, on_screen.velocity, on_screen.price])
     if network_active:
         epsilon = random.uniform(0, 1)
         if epsilon < 0.1:  # Exploration
@@ -262,8 +309,18 @@ def move_player():
         player.auto_move(int(np.round(next_move[0])) % 10)
     else:
         next_move = np.array([player.lane])
+
     trial_data = TrialData(on_screen, next_move)
-    trial_data.score = score - old_score
+
+    if network_active:
+        for collectible in collectibles:
+            if int(np.round(next_move[0])) % 10 == collectible.lane and (collectible.x1 < 100 or collectible.x2 > 50):
+                trial_data.score += collectible.price
+    else:
+        for collectible in collectibles:
+            if player.lane == collectible.lane and (collectible.x1 < 100 or collectible.x2 > 50):
+                trial_data.score += collectible.price
+    print("Score: ", trial_data.score)
 
     current_game_data.append(trial_data)
 
@@ -275,24 +332,11 @@ def move_collectibles():
         if collectible.x1 < 0:
             collectibles.remove(collectible)
             canvas.delete(collectible.id)
+        detect_collision(collectible)
+    move_player()
     canvas.update()
     if game_active:
-        canvas.after(int(movement_rate), move_collectibles)
-
-
-# This handles collision detection
-def detect_collision():
-    global score
-    for collectible in collectibles:
-        if ((player.x1 < collectible.x1 < player.x2 or player.x1 < collectible.x2 < player.x2)
-                and player.lane == collectible.lane):
-            player.money += collectible.price
-            canvas.delete(collectible.id)
-            collectibles.remove(collectible)
-            score += collectible.price
-            all_labels["score_label"].configure(text="Score: " + str(score))
-    if game_active:
-        canvas.after(10, detect_collision)
+        canvas.after(movement_rate, move_collectibles)
 
 
 def run_game():
@@ -304,7 +348,11 @@ def run_game():
     for i in range(10):
         all_labels["lane" + str(i)].place(x=10, y=i * 50)
 
-    # Display the score
+    # Display the labels for score, move, and generation
+    all_labels["move_label"].place(relx=0.01, rely=0.9, relwidth=0.2, relheight=0.05)
+    all_labels["move_label"].configure(text="Move: 0")
+    all_labels["generation_label"].place(relx=0.21, rely=0.9, relwidth=0.2, relheight=0.05)
+    all_labels["generation_label"].configure(text="Generation: 0")
     all_labels["score_label"].configure(text="Score: " + str(score))
     all_labels["score_label"].place(relx=0.4, rely=0.9, relwidth=0.2, relheight=0.05)
     all_buttons["quit_button"].place(relx=0.895, rely=0.935, relwidth=0.1, relheight=0.06)
@@ -313,14 +361,11 @@ def run_game():
     # Begin main loop.
     # Make blocks
     for n in range(100):
-        canvas.after(int(generation_rate * n), generate_collectible)
-        canvas.after(int(delay + int(generation_rate * (n-1))), move_player)
-    # Move blocks
-    move_collectibles()
-    # Detect collisions
-    detect_collision()
+        canvas.after(generation_rate * n, lambda x=n: generate_collectible(x))
+    # Move blocks, player, and check for collisions
+    canvas.after(10, move_collectibles)
     # End game
-    canvas.after(int(delay + int(generation_rate * 100)), end_game)
+    canvas.after(delay, end_game)
 
 
 def start_game():
@@ -337,7 +382,6 @@ def start_game():
 
     global current_game_data
     current_game_data = []
-
 
     # Train the neural network for the level
     if network_active:
@@ -462,7 +506,7 @@ def build_screen():
     global game_speed, generation_rate, movement_rate, player_velocity, delay
     game_speed = 1
     delay = int((screen_width * movement_rate / collectible_speed) / game_speed)
-    generation_rate = int(333 * (1 / game_speed))  # More speed → smaller delay
+    generation_rate = int(333 * (1 / game_speed))
     movement_rate = int(60 * (1 / game_speed))
     player_velocity = 1 * game_speed
 
@@ -532,6 +576,7 @@ def supervise_screen():
     clear_GUI()
     global network_active
     network_active = False
+
     def set_speed(speed):
         global game_speed, generation_rate, movement_rate, player_velocity, delay
         game_speed = speed
@@ -543,17 +588,16 @@ def supervise_screen():
 
     # Display the speed buttons
     all_buttons["slow_button"].place(relx=0.2, rely=0.05, relwidth=0.6, relheight=0.19)
-    all_buttons["slow_button"].configure(command=lambda: set_speed(1/3))
+    all_buttons["slow_button"].configure(command=lambda: set_speed(1 / 3))
     all_buttons["medium_button"].place(relx=0.2, rely=0.25, relwidth=0.6, relheight=0.19)
-    all_buttons["medium_button"].configure(command=lambda: set_speed(2/3))
+    all_buttons["medium_button"].configure(command=lambda: set_speed(2 / 3))
     all_buttons["fast_button"].place(relx=0.2, rely=0.45, relwidth=0.6, relheight=0.19)
     all_buttons["fast_button"].configure(command=lambda: set_speed(1))
     all_buttons["hyper_button"].place(relx=0.2, rely=0.65, relwidth=0.6, relheight=0.19)
-    all_buttons["hyper_button"].configure(command=lambda: set_speed(10/3))
+    all_buttons["hyper_button"].configure(command=lambda: set_speed(10 / 3))
     all_buttons["quit_button"].place(relx=0.01, rely=0.935, relwidth=0.1, relheight=0.06)
     all_buttons["quit_button"].configure(command=main_menu)
     all_buttons["play_button"].place_forget()
-
 
 
 # This is the entry point of the game. It displays the main menu.
