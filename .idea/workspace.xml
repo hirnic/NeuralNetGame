@@ -5,11 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="8eb0c60f-a32e-4b8d-ac31-965885d2c405" name="Changes" comment="The game is playable. I forgot to add a loading screen and I want to play around with many different types of neural nets. The one I have now is extremely skibbidy.">
-      <change afterPath="$PROJECT_DIR$/BrainV2.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/GUI_V2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/NeuralNetGame.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/NeuralNetGame.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Brain.py" beforeDir="false" afterPath="$PROJECT_DIR$/Brain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/BrainV2.py" beforeDir="false" afterPath="$PROJECT_DIR$/BrainV2.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/GUI.py" beforeDir="false" afterPath="$PROJECT_DIR$/GUI.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -27,6 +27,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;hirnic&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/hirnic/NeuralNetGame.git&quot;,
+    &quot;accountId&quot;: &quot;5be667a8-456b-4d7b-9864-9245590447a3&quot;
+  }
+}</component>
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
   </component>
@@ -42,7 +54,9 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Python.Brain.executor": "Run",
+    "Python.BrainV2.executor": "Run",
     "Python.GUI.executor": "Run",
+    "Python.GUI_V2.executor": "Run",
     "Python.Test.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
