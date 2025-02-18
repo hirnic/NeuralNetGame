@@ -11,10 +11,10 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset  # For mini-batch training
 
 
-input_dim = 4
+input_dim = 48
 output_dim = 1
-batch_size = 10
-max_data_points = 50  # maximum number of data points to store in the training set. More can be purchased.
+batch_size = 100
+max_data_points = 10000  # maximum number of data points to store in the training set. More can be purchased.
 
 
 class Layer:
@@ -29,8 +29,8 @@ class Net:
     def __init__(self, layers, node_value):
         self.layers = layers  # list of Layer objects
         self.node_value = node_value  # int value for nodes
-        self.exploration_rate = 0.1  # exploration rate for epsilon-greedy strategy... maybe?
-        self.memory = 50  # max_data_points integer
+        self.exploration_rate = 0.1  # exploration rate for epsilon-greedy strategy
+        self.memory = max_data_points  # max_data_points integer
         self.training_set = []  # list of TrialData objects
 
     def total_nodes(self):
@@ -40,45 +40,25 @@ class Net:
         return len(self.layers)
 
 
-default_network = Net([Layer(50)], node_value=1)
+default_network = Net([Layer(5)], node_value=1)
 
 
 # Here we have the class for the trial data.
 class TrialData:
     def __init__(self, on_screen, next_move):
-        self.on_screen = on_screen  # List of lists [lane, x_position, velocity, price, player lane], max determined by
-        # limitations of neural network. Maximum can be increased by purchasing more space in the shop up to 5.
+        self.on_screen = on_screen  # List of lists [lane, x_position, velocity, price].
         self.next_move = next_move  # Int
         self.score = 0  # Int represents the number of points gained due to this action
-
-
-full_data_set = []
-# # List of TrialData objects
-# for _ in range(max_data_points):
-#     input = np.array([random.randint(0,9) for _ in range(input_dim)])
-#     output = np.array([input[0]])
-#     delta = random.uniform(0,1)
-#     # Here we select some random entries in the output and change them
-#     while delta > 0.1:
-#         output[random.randint(0,output_dim-1)] = random.randint(0,9)
-#         delta -= 0.1
-#     trial_data = TrialData(input, output)
-#     trial_data.score = (np.linalg.norm(input[::6] - output)+0.1)**(-1)
-#     # trial_data.score = 10
-#     full_data_set.append(trial_data)
-
-# X_train = np.array([data.number for data in full_data_set])
-# Y_train = np.array([data.moves for data in full_data_set])
 
 
 class NeuralNetwork(nn.Module):
     def __init__(self, network):  # network is a Net object
         super(NeuralNetwork, self).__init__()
-        layers = [nn.Linear(input_dim, network.node_value * network.layers[0].nodes), nn.Softplus()]
+        layers = [nn.Linear(input_dim, network.node_value * network.layers[0].nodes), nn.ReLU()]
         for i in range(1, len(network.layers)):
             layers.append(nn.Linear(network.node_value * network.layers[i - 1].nodes,
                                     network.node_value * network.layers[i].nodes))
-            layers.append(nn.Softplus())  # Replace ReLU with Softplus
+            layers.append(nn.ReLU())  # Replace ReLU with Softplus
         layers.append(nn.Linear(network.node_value * network.layers[-1].nodes, output_dim))
         self.model = nn.Sequential(*layers)
 
@@ -87,15 +67,21 @@ class NeuralNetwork(nn.Module):
 
 
 def train_model(network=default_network):
-    # global X_train, Y_train
-    X_train = np.array([data.on_screen for data in network.training_set])
-    Y_train = np.array([data.next_move.item() if isinstance(data.next_move, torch.Tensor) else data.next_move
-                        for data in network.training_set], dtype=np.float32)
-    # Ensure Y_train is a 1D array
-    Y_train = Y_train.reshape(-1, 1)
-    # Convert numpy arrays to PyTorch tensors
-    X_train_tensor = torch.from_numpy(X_train).float()
-    Y_train_tensor = torch.from_numpy(Y_train).float().view(-1, 1)
+    # Collect training data properly
+    X_train_list = []
+    Y_train_list = []
+
+    for data in network.training_set:
+        X_train_list.append(data.on_screen)  # Assume `data.on_screen` is already a tensor
+        Y_train_list.append(torch.tensor([data.next_move], dtype=torch.float32))  # Ensure shape (1,)
+
+    if not X_train_list:  # Handle case when training set is empty
+        print("No training data available.")
+        return None
+
+    # Stack collected tensors
+    X_train_tensor = torch.stack(X_train_list)  # Shape: (num_samples, num_features)
+    Y_train_tensor = torch.stack(Y_train_list)  # Shape: (num_samples, 1)
 
     # Create dataset and dataloader
     train_dataset = TensorDataset(X_train_tensor, Y_train_tensor)
@@ -103,7 +89,7 @@ def train_model(network=default_network):
 
     model = NeuralNetwork(network)
     criterion = nn.MSELoss()
-    optimizer = optim.SGD(model.parameters(), lr=0.01)
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
 
     model.train()
     for epoch in range(50):
@@ -115,6 +101,26 @@ def train_model(network=default_network):
             optimizer.step()
 
     return model
+
+
+# We are going to make a set of training data to see how well the model performs
+def make_data_point():
+    tensor = torch.tensor([])  # The input data will be 48 numbers long
+    for _ in range(input_dim // 4):
+        tensor = torch.cat((tensor, torch.tensor(
+            [random.randint(0,9),
+             random.randint(0,600),
+             random.uniform(1,3),
+             random.choice([1, 1, 1, 1, 1, 1, 1, 5, 5, 10])],  #[lane, x_position, velocity, price, player lane]
+            dtype=torch.float32)))
+        trial_data = TrialData(tensor, torch.tensor([random.randint(0,9)], dtype=torch.float32))
+
+    for collectible in [tensor[i:i+4] for i in range(0, 48, 4)]:
+        if trial_data.next_move[0] == collectible[0] and 0 < collectible[1] < 100:
+            trial_data.score += collectible[3]
+            trial_data.score += collectible[3]
+
+    return trial_data
 
 
 # score_per_round = []
